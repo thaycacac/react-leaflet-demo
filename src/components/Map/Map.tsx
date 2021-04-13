@@ -1,14 +1,16 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { DivIcon, LatLngExpression } from "leaflet";
 import { MapContainer, TileLayer, Marker, Tooltip } from "react-leaflet";
 import { connect } from "react-redux";
 import {
+  setAllPlaces,
   setPlacePreviewVisibility,
   setSelectedPlace,
 } from "../../store/actions";
 import { IState, Place } from "../../store/models";
 import L from "leaflet";
 import { COLOR } from "./constants";
+import db from "../../db.json";
 import "./Map.css";
 
 const Map = ({
@@ -17,19 +19,52 @@ const Map = ({
   selectedPlace,
   togglePreview,
   setPlaceForPreview,
+  setAllPlaces,
 }: any) => {
   const defaultPosition: LatLngExpression = [47.495632, 19.061795];
+  // for fake data
+  const [count, setCount] = useState(0);
+
+  const callApi = async () => {
+    await fetch(
+      "https://my-json-server.typicode.com/thaycacac/react-leaflet-demo/data4"
+    );
+  };
+
+  useEffect(() => {
+    // @ts-ignore
+    setAllPlaces(db[`data${count}`]);
+    const idInterval = setInterval(() => {
+      callApi();
+      setCount((count + 1) % 5);
+      // @ts-ignore
+      setAllPlaces(db[`data${count}`]);
+      const newPlace = places.find(
+        (place: Place) => place?.name === selectedPlace?.name
+      );
+      if (!!newPlace) {
+        setPlaceForPreview(newPlace);
+      }
+      console.log(
+        places.find((place: Place) => place?.name === selectedPlace?.name)
+      );
+    }, 5000);
+
+    return () => {
+      clearInterval(idInterval);
+    };
+  }, [count]);
 
   const showPreview = (place: Place) => {
     if (isVisible) {
       togglePreview(false);
       setPlaceForPreview(null);
-    }
-
-    if (selectedPlace?.title !== place.name) {
+    } else if (selectedPlace?.name !== place?.name) {
       setTimeout(() => {
         showPlace(place);
       }, 400);
+    } else {
+      setPlaceForPreview(place);
     }
   };
 
@@ -51,8 +86,7 @@ const Map = ({
           attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
-
-        {places.map((place: Place) => (
+        {places?.map((place: Place) => (
           <Marker
             key={place.name}
             position={place.pos}
@@ -100,6 +134,7 @@ const mapDispatchToProps = (dispatch: any) => {
     togglePreview: (payload: boolean) =>
       dispatch(setPlacePreviewVisibility(payload)),
     setPlaceForPreview: (payload: Place) => dispatch(setSelectedPlace(payload)),
+    setAllPlaces: (payload: Place[]) => dispatch(setAllPlaces(payload)),
   };
 };
 
