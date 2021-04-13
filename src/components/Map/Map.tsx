@@ -12,6 +12,7 @@ import L from "leaflet";
 import { COLOR } from "./constants";
 import db from "../../db.json";
 import "./Map.css";
+import ClickOther from "./ClickOther";
 
 const Map = ({
   isVisible,
@@ -45,9 +46,6 @@ const Map = ({
       if (!!newPlace) {
         setPlaceForPreview(newPlace);
       }
-      console.log(
-        places.find((place: Place) => place?.name === selectedPlace?.name)
-      );
     }, 5000);
 
     return () => {
@@ -59,6 +57,9 @@ const Map = ({
     if (isVisible) {
       togglePreview(false);
       setPlaceForPreview(null);
+      setTimeout(() => {
+        showPlace(place);
+      }, 400)
     } else if (selectedPlace?.name !== place?.name) {
       setTimeout(() => {
         showPlace(place);
@@ -115,6 +116,7 @@ const Map = ({
             <Tooltip>{place.name}</Tooltip>
           </Marker>
         ))}
+        <ClickOther />
       </MapContainer>
     </div>
   );
